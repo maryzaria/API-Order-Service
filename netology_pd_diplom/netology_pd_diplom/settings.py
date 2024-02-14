@@ -19,12 +19,12 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '=hs6$#5om031nujz4staql9mbuste=!dc^6)4opsjq!vvjxzj@'
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DEBUG")
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS").split(",")
 
 # Application definition
 
@@ -76,15 +76,15 @@ WSGI_APPLICATION = 'netology_pd_diplom.wsgi.application'
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 
 DATABASES = {
-
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    "default": {
+        "ENGINE": os.getenv("DB_ENGINE", default="django.db.backends.sqlite3"),
+        "NAME": os.getenv("DB_NAME", default="db.sqlite3"),
+        "HOST": os.getenv("DB_HOST", "localhost"),
+        "PORT": os.getenv("DB_PORT", "5432"),
+        "USER": os.getenv("DB_USER", default="user"),
+        "PASSWORD": os.getenv("DB_PASSWORD", default="password"),
     }
-
-
 }
-
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
 
