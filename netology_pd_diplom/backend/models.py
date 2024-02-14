@@ -22,9 +22,6 @@ USER_TYPE_CHOICES = (
 )
 
 
-# Create your models here.
-
-
 class UserManager(BaseUserManager):
     """
     Миксин для управления пользователями
