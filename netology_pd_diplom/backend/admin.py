@@ -5,6 +5,21 @@ from backend.models import User, Shop, Category, Product, ProductInfo, Parameter
     Contact, ConfirmEmailToken
 
 
+class ProductInline(admin.TabularInline):
+    model = Product
+    extra = 1
+
+
+class ProductParameterInline(admin.TabularInline):
+    model = ProductParameter
+    extra = 1
+
+
+class OrderItemInline(admin.TabularInline):
+    model = OrderItem
+    extra = 1
+
+
 @admin.register(User)
 class CustomUserAdmin(UserAdmin):
     """
@@ -25,47 +40,62 @@ class CustomUserAdmin(UserAdmin):
 
 @admin.register(Shop)
 class ShopAdmin(admin.ModelAdmin):
-    pass
+    fieldsets = (
+        (None, {"fields": ("name", "state")}),
+        ("Additional Info", {"fields": ("url", "user")}),
+    )
+    list_display = ("name", "state", "url")
+    list_filter = ("name", "state")
 
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    pass
+    inlines = [ProductInline]
 
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    pass
+    list_display = ("id", "name", "category")
+    list_filter = ("id", "name", "category")
 
 
 @admin.register(ProductInfo)
 class ProductInfoAdmin(admin.ModelAdmin):
-    pass
+    fieldsets = (
+        (None, {"fields": ("product", "model", "external_id", "quantity")}),
+        ("Цены", {"fields": ("price", "price_rrc")}),
+    )
+    list_display = ("product", "external_id", "price", "price_rrc", "quantity")
+    inlines = [ProductParameterInline]
 
 
 @admin.register(Parameter)
 class ParameterAdmin(admin.ModelAdmin):
-    pass
+    list_display = ("name",)
 
 
 @admin.register(ProductParameter)
 class ProductParameterAdmin(admin.ModelAdmin):
-    pass
+    list_display = ("product_info", "parameter", "value")
+    list_filter = ("value", "parameter")
 
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    pass
+    list_display = ("id", "user", "created_at", "state")
+    list_filter = ("id", "user", "created_at", "state")
+    inlines = [OrderItemInline]
 
 
 @admin.register(OrderItem)
 class OrderItemAdmin(admin.ModelAdmin):
-    pass
+    list_display = ("id", "order", "product_info", "quantity")
 
 
 @admin.register(Contact)
 class ContactAdmin(admin.ModelAdmin):
-    pass
+    list_display = ("id", "city", "phone")
+    list_filter = ("id", "city")
 
 
 @admin.register(ConfirmEmailToken)
