@@ -2,6 +2,9 @@
 
 [Документация по запросам в PostMan](https://documenter.getpostman.com/view/5037826/SVfJUrSc) 
 
+Порт для отправки запросов: 1337
+
+
 ## **установка СУБД**
 
     sudo nano  /etc/apt/sources.list.d/pgdg.list
