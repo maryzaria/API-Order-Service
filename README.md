@@ -11,9 +11,14 @@ API Сервиса для магазина
 2. Проверяем, запустилась ли база данных и применились ли миграции:
 ```docker-compose exec web python manage.py migrate --noinput  ```
 
-Должно получиться: Running migrations: No migrations to apply
+Должно получиться:
+![img.png](reference/img.png)
 
 3. Собираем статические файлы
 ```docker-compose exec web python manage.py collectstatic --no-input --clear  ```
+4. Создаем суперпользователя
+```docker-compose exec web python manage.py createsuperuser```
 
-Проверить работоспособность: запрос на ```http://localhost:1337/```
+### Проверить работоспособность
+
+Отправить запрос на ```http://localhost:1337/admin/```
