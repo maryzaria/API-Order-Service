@@ -82,8 +82,8 @@ class ProductParameterAdmin(admin.ModelAdmin):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ("id", "user", "created_at", "state")
-    list_filter = ("id", "user", "created_at", "state")
+    list_display = ("id", "user", "dt", "state")
+    list_filter = ("id", "user", "dt", "state")
     inlines = [OrderItemInline]
 
 

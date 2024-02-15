@@ -6,8 +6,14 @@ API Сервиса для магазина
 
 
 ## Запуск приложения
-1. ```docker-compose -f docker-compose.prod.yml up -d --build```
-2. ```docker-compose -f docker-compose.prod.yml exec web python manage.py migrate --noinput  ```
-3. ```docker-compose -f docker-compose.prod.yml exec web python manage.py collectstatic --no-input --clear  ```
+1. Запускаем контейнер:
+```docker-compose up -d --build```
+2. Проверяем, запустилась ли база данных и применились ли миграции:
+```docker-compose exec web python manage.py migrate --noinput  ```
+
+Должно получиться: Running migrations: No migrations to apply
+
+3. Собираем статические файлы
+```docker-compose exec web python manage.py collectstatic --no-input --clear  ```
 
 Проверить работоспособность: запрос на ```http://localhost:1337/```

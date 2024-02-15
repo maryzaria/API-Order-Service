@@ -14,6 +14,6 @@ RUN pip install --upgrade pip
 COPY ./requirements.txt /src/requirements.txt
 RUN pip install -r /src/requirements.txt
 
-COPY . .
+COPY . /src
 
 ENTRYPOINT ["/src/entrypoint.sh"]
