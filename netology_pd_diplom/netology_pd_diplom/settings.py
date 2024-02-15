@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'django_rest_passwordreset',
+    "drf_spectacular",
 ]
 
 MIDDLEWARE = [
@@ -151,7 +152,15 @@ REST_FRAMEWORK = {
 
         'rest_framework.authentication.TokenAuthentication',
     ),
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 
 }
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "API Order Service",
+    "DESCRIPTION": "Api for service of sales",
+    "VERSION": "v1",
+    "SERVE_INCLUDE_SCHEMA": False,
+}
