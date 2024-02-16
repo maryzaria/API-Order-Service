@@ -2,7 +2,7 @@ from distutils.util import strtobool
 
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
-from django.core.exceptions import ValidationError
+from django.core.exceptions import PermissionDenied
 from django.core.validators import URLValidator
 from django.db import IntegrityError
 from django.db.models import F, Q, Sum
@@ -19,8 +19,10 @@ from rest_framework import serializers as s
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.generics import ListAPIView
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
 from yaml import Loader
 from yaml import load as load_yaml
@@ -37,6 +39,7 @@ from backend.models import (
     ProductParameter,
     Shop,
 )
+from backend.permissions import IsShop, IsOwner
 from backend.serializers import (
     AddContactSerializer,
     CategorySerializer,
@@ -194,6 +197,8 @@ class AccountDetails(APIView):
     Attributes:
     - None
     """
+    permission_classes = (IsAuthenticated, IsOwner)
+    throttle_classes = (UserRateThrottle,)
 
     # получить данные
     @extend_schema(
@@ -212,11 +217,6 @@ class AccountDetails(APIView):
         Returns:
         - Response: The response containing the details of the authenticated user.
         """
-        if not request.user.is_authenticated:
-            return JsonResponse(
-                {"Status": False, "Error": "Log in required"},
-                status=status.HTTP_403_FORBIDDEN,
-            )
 
         serializer = UserSerializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -246,12 +246,6 @@ class AccountDetails(APIView):
         Returns:
         - JsonResponse: The response indicating the status of the operation and any errors.
         """
-        if not request.user.is_authenticated:
-            return JsonResponse(
-                {"Status": False, "Error": "Log in required"},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-        # проверяем обязательные аргументы
 
         if "password" in request.data:
             errors = {}
@@ -435,6 +429,9 @@ class BasketView(APIView):
     - None
     """
 
+    permission_classes = (IsAuthenticated,)
+    throttle_classes = (UserRateThrottle,)
+
     # получить корзину
     @extend_schema(
         responses={
@@ -452,11 +449,7 @@ class BasketView(APIView):
         Returns:
         - Response: The response containing the items in the user's basket.
         """
-        if not request.user.is_authenticated:
-            return JsonResponse(
-                {"Status": False, "Error": "Log in required"},
-                status=status.HTTP_403_FORBIDDEN,
-            )
+
         basket = (
             Order.objects.filter(user_id=request.user.id, state="basket")
             .prefetch_related(
@@ -503,12 +496,6 @@ class BasketView(APIView):
         Returns:
         - JsonResponse: The response indicating the status of the operation and any errors.
         """
-
-        if not request.user.is_authenticated:
-            return JsonResponse(
-                {"Status": False, "Error": "Log in required"},
-                status=status.HTTP_403_FORBIDDEN,
-            )
         try:
             items_list = request.data
             if items_list:
@@ -548,6 +535,11 @@ class BasketView(APIView):
             return JsonResponse(
                 {"Status": False, "Errors": "Неверный формат запроса"},
                 status=status.HTTP_400_BAD_REQUEST,
+            )
+        except PermissionDenied as err:
+            return JsonResponse(
+                {"Status": False, "Error": err},
+                status=status.HTTP_403_FORBIDDEN,
             )
         except Exception as err:
             return JsonResponse(
@@ -589,11 +581,6 @@ class BasketView(APIView):
         Returns:
         - JsonResponse: The response indicating the status of the operation and any errors.
         """
-        if not request.user.is_authenticated:
-            return JsonResponse(
-                {"Status": False, "Error": "Log in required"},
-                status=status.HTTP_403_FORBIDDEN,
-            )
         try:
             items_sting = request.query_params.get("items_id")
             if items_sting:
@@ -617,6 +604,11 @@ class BasketView(APIView):
             return JsonResponse(
                 {"Status": False, "Errors": "Не указаны все необходимые аргументы"},
                 status=status.HTTP_400_BAD_REQUEST,
+            )
+        except PermissionDenied as err:
+            return JsonResponse(
+                {"Status": False, "Error": err},
+                status=status.HTTP_403_FORBIDDEN,
             )
         except Exception as err:
             return JsonResponse(
@@ -651,11 +643,6 @@ class BasketView(APIView):
         Returns:
         - JsonResponse: The response indicating the status of the operation and any errors.
         """
-        if not request.user.is_authenticated:
-            return JsonResponse(
-                {"Status": False, "Error": "Log in required"},
-                status=status.HTTP_403_FORBIDDEN,
-            )
         try:
             items_list = request.data
             if items_list:
@@ -685,6 +672,11 @@ class BasketView(APIView):
                 {"Status": False, "Errors": "Неверный формат запроса"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        except PermissionDenied as err:
+            return JsonResponse(
+                {"Status": False, "Error": err},
+                status=status.HTTP_403_FORBIDDEN,
+            )
         except Exception as err:
             return JsonResponse(
                 {"Status": False, "Error": str(err)}, status=status.HTTP_400_BAD_REQUEST
@@ -701,6 +693,8 @@ class PartnerUpdate(APIView):
     Attributes:
     - None
     """
+    permission_classes = (IsAuthenticated, IsShop)
+    throttle_classes = (UserRateThrottle,)
 
     @extend_schema(
         parameters=[
@@ -736,24 +730,13 @@ class PartnerUpdate(APIView):
         Returns:
         - JsonResponse: The response indicating the status of the operation and any errors.
         """
-        if not request.user.is_authenticated:
-            return JsonResponse(
-                {"Status": False, "Error": "Log in required"},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
-        if request.user.type != "shop":
-            return JsonResponse(
-                {"Status": False, "Error": "Только для магазинов"},
-                status=status.HTTP_403_FORBIDDEN,
-            )
 
         url = request.query_params.get("url")
         if url:
             validate_url = URLValidator()
             try:
                 validate_url(url)
-            except ValidationError as e:
+            except Exception as e:
                 return JsonResponse({"Status": False, "Error": str(e)})
             else:
                 stream = get(url).content
@@ -810,6 +793,8 @@ class PartnerState(APIView):
     Attributes:
     - None
     """
+    permission_classes = (IsAuthenticated, IsShop)
+    throttle_classes = (UserRateThrottle,)
 
     # получить текущий статус
     @extend_schema(
@@ -828,18 +813,6 @@ class PartnerState(APIView):
         Returns:
         - Response: The response containing the state of the partner.
         """
-        if not request.user.is_authenticated:
-            return JsonResponse(
-                {"Status": False, "Error": "Log in required"},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
-        if request.user.type != "shop":
-            return JsonResponse(
-                {"Status": False, "Error": "Только для магазинов"},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
         shop = request.user.shop
         serializer = ShopSerializer(shop)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -879,17 +852,7 @@ class PartnerState(APIView):
         Returns:
         - JsonResponse: The response indicating the status of the operation and any errors.
         """
-        if not request.user.is_authenticated:
-            return JsonResponse(
-                {"Status": False, "Error": "Log in required"},
-                status=status.HTTP_403_FORBIDDEN,
-            )
 
-        if request.user.type != "shop":
-            return JsonResponse(
-                {"Status": False, "Error": "Только для магазинов"},
-                status=status.HTTP_403_FORBIDDEN,
-            )
         state = request.query_params.get("state")
         if state:
             try:
@@ -918,6 +881,8 @@ class PartnerOrders(APIView):
     Attributes:
     - None
     """
+    permission_classes = (IsAuthenticated, IsShop)
+    throttle_classes = (UserRateThrottle,)
 
     @extend_schema(
         responses={
@@ -935,17 +900,6 @@ class PartnerOrders(APIView):
         Returns:
         - Response: The response containing the orders associated with the partner.
         """
-        if not request.user.is_authenticated:
-            return JsonResponse(
-                {"Status": False, "Error": "Log in required"},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
-        if request.user.type != "shop":
-            return JsonResponse(
-                {"Status": False, "Error": "Только для магазинов"},
-                status=status.HTTP_403_FORBIDDEN,
-            )
 
         order = (
             Order.objects.filter(
@@ -983,6 +937,8 @@ class ContactView(APIView):
     Attributes:
     - None
     """
+    permission_classes = (IsAuthenticated,)
+    throttle_classes = (UserRateThrottle,)
 
     # получить мои контакты
     @extend_schema(
@@ -1001,11 +957,7 @@ class ContactView(APIView):
         Returns:
         - Response: The response containing the contact information.
         """
-        if not request.user.is_authenticated:
-            return JsonResponse(
-                {"Status": False, "Error": "Log in required"},
-                status=status.HTTP_403_FORBIDDEN,
-            )
+
         contact = Contact.objects.filter(user_id=request.user.id)
         serializer = ContactSerializer(contact, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -1029,11 +981,7 @@ class ContactView(APIView):
         Returns:
         - JsonResponse: The response indicating the status of the operation and any errors.
         """
-        if not request.user.is_authenticated:
-            return JsonResponse(
-                {"Status": False, "Error": "Log in required"},
-                status=status.HTTP_403_FORBIDDEN,
-            )
+
         if {"city", "street", "phone"}.issubset(request.data):
             request.data.update({"user": request.user.id})
             serializer = ContactSerializer(data=request.data)
@@ -1087,11 +1035,7 @@ class ContactView(APIView):
         Returns:
         - JsonResponse: The response indicating the status of the operation and any errors.
         """
-        if not request.user.is_authenticated:
-            return JsonResponse(
-                {"Status": False, "Error": "Log in required"},
-                status=status.HTTP_403_FORBIDDEN,
-            )
+
         try:
             items_sting = request.query_params.get("items")
             if items_sting:
@@ -1152,11 +1096,6 @@ class ContactView(APIView):
         Returns:
         - JsonResponse: The response indicating the status of the operation and any errors.
         """
-        if not request.user.is_authenticated:
-            return JsonResponse(
-                {"Status": False, "Error": "Log in required"},
-                status=status.HTTP_403_FORBIDDEN,
-            )
 
         contact_id = request.query_params.get("contact_id")
         if contact_id and contact_id.isdigit():
@@ -1192,6 +1131,9 @@ class OrderView(APIView):
     - None
     """
 
+    permission_classes = (IsAuthenticated,)
+    throttle_classes = (UserRateThrottle,)
+
     # получить мои заказы
     @extend_schema(
         responses={
@@ -1209,11 +1151,7 @@ class OrderView(APIView):
         Returns:
         - Response: The response containing the details of the order.
         """
-        if not request.user.is_authenticated:
-            return JsonResponse(
-                {"Status": False, "Error": "Log in required"},
-                status=status.HTTP_403_FORBIDDEN,
-            )
+
         order = (
             Order.objects.filter(user_id=request.user.id)
             .exclude(state="basket")
@@ -1259,11 +1197,6 @@ class OrderView(APIView):
         Returns:
         - JsonResponse: The response indicating the status of the operation and any errors.
         """
-        if not request.user.is_authenticated:
-            return JsonResponse(
-                {"Status": False, "Error": "Log in required"},
-                status=status.HTTP_403_FORBIDDEN,
-            )
 
         if {"id", "contact"}.issubset(request.data):
             if request.data["id"].isdigit():

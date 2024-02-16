@@ -33,6 +33,7 @@ class ContactSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     contacts = ContactSerializer(read_only=True, many=True)
+    password = serializers.CharField(max_length=100)
 
     class Meta:
         model = User
@@ -41,9 +42,10 @@ class UserSerializer(serializers.ModelSerializer):
             "first_name",
             "last_name",
             "email",
+            "password",
             "company",
             "position",
-            "contacts",
+            "contacts"
         )
         read_only_fields = ("id",)
 
