@@ -1,8 +1,8 @@
-API Сервиса для магазина
+# API Сервис заказа товаров для розничных сетей
 
 [Задание](./reference/diploma_project.md)
 
-[Документация по запросам в PostMan](https://documenter.getpostman.com/view/5037826/SVfJUrSc) 
+[Документация по запросам в Swagger](https://app.swaggerhub.com/apis/ZARIPOVAMARYM/Diploma/1.0.0) 
 
 
 ## Запуск приложения
@@ -22,3 +22,4 @@ API Сервиса для магазина
 ### Проверить работоспособность
 
 Отправить запрос на ```http://localhost:1337/admin/```
+Документация: ```http://localhost:1337/openapi/```

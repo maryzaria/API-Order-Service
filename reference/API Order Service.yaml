@@ -1,0 +1,1244 @@
+openapi: 3.0.3
+info:
+  title: API Order Service
+  version: 1.0.0
+  description: Api for service of sales
+paths:
+  /api/v1/basket:
+    get:
+      operationId: api_v1_basket_list
+      description: |-
+        Retrieve the items in the user's basket.
+
+        Args:
+        - request (Request): The Django request object.
+
+        Returns:
+        - Response: The response containing the items in the user's basket.
+      tags:
+      - api
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order'
+          description: ''
+        '403':
+          description: Учетные данные не были предоставлены
+    post:
+      operationId: api_v1_basket_create
+      description: |-
+        Add an items to the user's basket.
+
+        Args:
+        - request (Request): The Django request object.
+
+        Returns:
+        - JsonResponse: The response indicating the status of the operation and any errors.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/OrderItem'
+          application/x-www-form-urlencoded:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/OrderItem'
+          multipart/form-data:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/OrderItem'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/basket_post'
+          description: Success
+        '400':
+          description: Некорректные данные
+        '403':
+          description: Учетные данные не были предоставлены
+    put:
+      operationId: api_v1_basket_update
+      description: |-
+        Update the items in the user's basket.
+
+        Args:
+        - request (Request): The Django request object.
+
+        Returns:
+        - JsonResponse: The response indicating the status of the operation and any errors.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/OrderItem'
+          application/x-www-form-urlencoded:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/OrderItem'
+          multipart/form-data:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/OrderItem'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/basket_update'
+          description: Success
+        '400':
+          description: Некорректные данные
+        '403':
+          description: Учетные данные не были предоставлены
+    delete:
+      operationId: api_v1_basket_destroy
+      description: |-
+        Remove  items from the user's basket.
+
+        Args:
+        - request (Request): The Django request object.
+
+        Returns:
+        - JsonResponse: The response indicating the status of the operation and any errors.
+      parameters:
+      - in: query
+        name: items_id
+        schema:
+          type: integer
+        description: перечислите id через запятую
+      tags:
+      - api
+      security:
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/basket_delete'
+          description: Success
+        '400':
+          description: Некорректные данные
+        '403':
+          description: Учетные данные не были предоставлены
+  /api/v1/categories:
+    get:
+      operationId: api_v1_categories_list
+      description: Класс для просмотра категорий
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCategoryList'
+          description: ''
+  /api/v1/order:
+    get:
+      operationId: api_v1_order_list
+      description: |-
+        Retrieve the details of user orders.
+
+        Args:
+        - request (Request): The Django request object.
+
+        Returns:
+        - Response: The response containing the details of the order.
+      tags:
+      - api
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order'
+          description: ''
+        '403':
+          description: Учетные данные не были предоставлены
+    post:
+      operationId: api_v1_order_create
+      description: |-
+        Put an order and send a notification.
+
+        Args:
+        - request (Request): The Django request object.
+
+        Returns:
+        - JsonResponse: The response indicating the status of the operation and any errors.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderFromBasket'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OrderFromBasket'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OrderFromBasket'
+      security:
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderView'
+          description: Success
+        '400':
+          description: Некорректные данные
+        '403':
+          description: Учетные данные не были предоставлены
+  /api/v1/partner/orders:
+    get:
+      operationId: api_v1_partner_orders_list
+      description: |-
+        Retrieve the orders associated with the authenticated partner.
+
+        Args:
+        - request (Request): The Django request object.
+
+        Returns:
+        - Response: The response containing the orders associated with the partner.
+      tags:
+      - api
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order'
+          description: ''
+        '403':
+          description: Учетные данные не были предоставлены
+  /api/v1/partner/state:
+    get:
+      operationId: api_v1_partner_state_retrieve
+      description: |-
+        Retrieve the state of the partner.
+
+        Args:
+        - request (Request): The Django request object.
+
+        Returns:
+        - Response: The response containing the state of the partner.
+      tags:
+      - api
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Shop'
+          description: ''
+        '403':
+          description: Учетные данные не были предоставлены
+    post:
+      operationId: api_v1_partner_state_create
+      description: |-
+        Update the state of a partner.
+
+        Args:
+        - request (Request): The Django request object.
+
+        Returns:
+        - JsonResponse: The response indicating the status of the operation and any errors.
+      parameters:
+      - in: query
+        name: state
+        schema:
+          type: boolean
+        description: Укажите url с информацией
+        required: true
+      tags:
+      - api
+      security:
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PartnerState'
+          description: Success
+        '400':
+          description: Не указаны все необходимые аргументы, либо они некорректны
+        '403':
+          description: Учетные данные не были предоставлены
+  /api/v1/partner/update:
+    post:
+      operationId: api_v1_partner_update_create
+      description: |-
+        Update the partner price list information.
+
+        Args:
+        - request (Request): The Django request object.
+
+        Returns:
+        - JsonResponse: The response indicating the status of the operation and any errors.
+      parameters:
+      - in: query
+        name: url
+        schema:
+          type: integer
+        description: Укажите url с информацией
+        required: true
+      tags:
+      - api
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PartnerUpdate'
+          description: Success
+        '400':
+          description: Не указаны все необходимые аргументы, либо они некорректны
+        '403':
+          description: Учетные данные не были предоставлены
+  /api/v1/products:
+    get:
+      operationId: api_v1_products_list
+      description: |-
+        Retrieve the product information based on the specified filters.
+
+        Args:
+        - request (Request): The Django request object.
+
+        Returns:
+        - Response: The response containing the product information.
+      parameters:
+      - in: query
+        name: category_id
+        schema:
+          type: integer
+        description: Enter category_id
+      - in: query
+        name: shop_id
+        schema:
+          type: integer
+        description: Enter shop_id
+      tags:
+      - api
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductInfo'
+          description: ''
+  /api/v1/shops:
+    get:
+      operationId: api_v1_shops_list
+      description: Класс для просмотра списка магазинов
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedShopList'
+          description: ''
+  /api/v1/user/contact:
+    get:
+      operationId: api_v1_user_contact_list
+      description: |-
+        Retrieve the contact information of the authenticated user.
+
+        Args:
+        - request (Request): The Django request object.
+
+        Returns:
+        - Response: The response containing the contact information.
+      tags:
+      - api
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Contact'
+          description: ''
+        '403':
+          description: Учетные данные не были предоставлены
+    post:
+      operationId: api_v1_user_contact_create
+      description: |-
+        Create a new contact for the authenticated user.
+
+        Args:
+        - request (Request): The Django request object.
+
+        Returns:
+        - JsonResponse: The response indicating the status of the operation and any errors.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddContact'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AddContact'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AddContact'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Contact'
+          description: ''
+        '400':
+          description: Предоставлены некорректные данные
+        '403':
+          description: Учетные данные не были предоставлены
+    put:
+      operationId: api_v1_user_contact_update
+      description: |-
+        Update the contact information of the authenticated user.
+
+        Args:
+        - request (Request): The Django request object.
+
+        Returns:
+        - JsonResponse: The response indicating the status of the operation and any errors.
+      parameters:
+      - in: query
+        name: contact_id
+        schema:
+          type: integer
+        description: Введите id контакта
+        required: true
+      tags:
+      - api
+      security:
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/update_contact'
+          description: Success
+        '400':
+          description: Некорректный contact_id
+        '403':
+          description: Учетные данные не были предоставлены
+    delete:
+      operationId: api_v1_user_contact_destroy
+      description: |-
+        Delete the contact of the authenticated user.
+
+        Args:
+        - request (Request): The Django request object.
+
+        Returns:
+        - JsonResponse: The response indicating the status of the operation and any errors.
+      parameters:
+      - in: query
+        name: items_id
+        schema:
+          type: integer
+        description: перечислите id контактов через запятую
+      tags:
+      - api
+      security:
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/basket_delete'
+          description: Success
+        '400':
+          description: Некорректные данные
+        '403':
+          description: Учетные данные не были предоставлены
+  /api/v1/user/details:
+    get:
+      operationId: api_v1_user_details_retrieve
+      description: |-
+        Retrieve the details of the authenticated user.
+
+        Args:
+        - request (Request): The Django request object.
+
+        Returns:
+        - Response: The response containing the details of the authenticated user.
+      tags:
+      - api
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+        '403':
+          description: Учетные данные не были предоставлены
+    post:
+      operationId: api_v1_user_details_create
+      description: |-
+        Update the account details of the authenticated user.
+
+        Args:
+        - request (Request): The Django request object.
+
+        Returns:
+        - JsonResponse: The response indicating the status of the operation and any errors.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/User'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/User'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountDetails'
+          description: Success
+        '400':
+          description: Некорректные данные
+        '403':
+          description: Учетные данные не были предоставлены
+  /api/v1/user/login:
+    post:
+      operationId: api_v1_user_login_create
+      description: |-
+        Authenticate a user.
+
+        Args:
+            request (Request): The Django request object.
+
+        Returns:
+            JsonResponse: The response indicating the status of the operation and any errors.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginAccount'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LoginAccount'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LoginAccount'
+        required: true
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/login_account'
+          description: Success
+        '400':
+          description: Некорректные данные
+  /api/v1/user/password_reset:
+    post:
+      operationId: api_v1_user_password_reset_create
+      description: |-
+        An Api View which provides a method to request a password reset token based on an e-mail address
+
+        Sends a signal reset_password_token_created when a reset token was created
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Email'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Email'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Email'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Email'
+          description: ''
+  /api/v1/user/password_reset/confirm:
+    post:
+      operationId: api_v1_user_password_reset_confirm_create
+      description: An Api View which provides a method to reset a password based on
+        a unique token
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordToken'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PasswordToken'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PasswordToken'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PasswordToken'
+          description: ''
+  /api/v1/user/register:
+    post:
+      operationId: api_v1_user_register_create
+      description: |-
+        Process a POST request and create a new user.
+
+        Args:
+            request (Request): The Django request object.
+
+        Returns:
+            JsonResponse: The response indicating the status of the operation and any errors.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/User'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/User'
+        required: true
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/user_register'
+          description: Success
+        '400':
+          description: Не указаны все необходимые аргументы, либо они некорректны
+        '403':
+          description: Учетные данные не были предоставлены
+  /api/v1/user/register/confirm:
+    post:
+      operationId: api_v1_user_register_confirm_create
+      description: |-
+        Подтверждает почтовый адрес пользователя.
+
+        Args:
+        - request (Request): The Django request object.
+
+        Returns:
+        - JsonResponse: The response indicating the status of the operation and any errors.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmAccount'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ConfirmAccount'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ConfirmAccount'
+        required: true
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfirmAccount'
+          description: Success
+        '400':
+          description: Не указаны все необходимые аргументы, либо они некорректны
+        '403':
+          description: Учетные данные не были предоставлены
+components:
+  schemas:
+    AccountDetails:
+      type: object
+      properties:
+        status:
+          type: boolean
+      required:
+      - status
+    AddContact:
+      type: object
+      properties:
+        city:
+          type: string
+          title: Город
+          maxLength: 50
+        street:
+          type: string
+          title: Улица
+          maxLength: 100
+        phone:
+          type: string
+          title: Телефон
+          maxLength: 20
+      required:
+      - city
+      - phone
+      - street
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Название
+          maxLength: 40
+      required:
+      - id
+      - name
+    ConfirmAccount:
+      type: object
+      properties:
+        email:
+          type: string
+          maxLength: 200
+        token:
+          type: string
+          maxLength: 200
+      required:
+      - email
+      - token
+    Contact:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        city:
+          type: string
+          title: Город
+          maxLength: 50
+        street:
+          type: string
+          title: Улица
+          maxLength: 100
+        house:
+          type: string
+          title: Дом
+          maxLength: 15
+        structure:
+          type: string
+          title: Корпус
+          maxLength: 15
+        building:
+          type: string
+          title: Строение
+          maxLength: 15
+        apartment:
+          type: string
+          title: Квартира
+          maxLength: 15
+        user:
+          type: integer
+          writeOnly: true
+          title: Пользователь
+        phone:
+          type: string
+          title: Телефон
+          maxLength: 20
+      required:
+      - city
+      - id
+      - phone
+      - street
+    Email:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+      required:
+      - email
+    LoginAccount:
+      type: object
+      properties:
+        email:
+          type: string
+          maxLength: 200
+        password:
+          type: string
+          maxLength: 200
+      required:
+      - email
+      - password
+    Order:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        ordered_items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItemCreate'
+          readOnly: true
+        state:
+          allOf:
+          - $ref: '#/components/schemas/StateEnum'
+          title: Статус
+        dt:
+          type: string
+          format: date-time
+          readOnly: true
+        total_sum:
+          type: integer
+        contact:
+          allOf:
+          - $ref: '#/components/schemas/Contact'
+          readOnly: true
+      required:
+      - contact
+      - dt
+      - id
+      - ordered_items
+      - state
+      - total_sum
+    OrderFromBasket:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        contact:
+          type: integer
+          nullable: true
+          title: Контакт
+      required:
+      - id
+    OrderItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        product_info:
+          type: integer
+          title: Информация о продукте
+        quantity:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          title: Количество
+        order:
+          type: integer
+          writeOnly: true
+          title: Заказ
+      required:
+      - id
+      - quantity
+    OrderItemCreate:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        product_info:
+          allOf:
+          - $ref: '#/components/schemas/ProductInfo'
+          readOnly: true
+        quantity:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          title: Количество
+        order:
+          type: integer
+          writeOnly: true
+          title: Заказ
+      required:
+      - id
+      - product_info
+      - quantity
+    OrderView:
+      type: object
+      properties:
+        Status:
+          type: boolean
+      required:
+      - Status
+    PaginatedCategoryList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+    PaginatedShopList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Shop'
+    PartnerState:
+      type: object
+      properties:
+        status:
+          type: boolean
+      required:
+      - status
+    PartnerUpdate:
+      type: object
+      properties:
+        status:
+          type: boolean
+      required:
+      - status
+    PasswordToken:
+      type: object
+      properties:
+        password:
+          type: string
+        token:
+          type: string
+      required:
+      - password
+      - token
+    Product:
+      type: object
+      properties:
+        name:
+          type: string
+          title: Название
+          maxLength: 80
+        category:
+          type: string
+          readOnly: true
+      required:
+      - category
+      - name
+    ProductInfo:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        model:
+          type: string
+          title: Модель
+          maxLength: 80
+        product:
+          allOf:
+          - $ref: '#/components/schemas/Product'
+          readOnly: true
+        shop:
+          type: integer
+          title: Магазин
+        quantity:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          title: Количество
+        price:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          title: Цена
+        price_rrc:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          title: Рекомендуемая розничная цена
+        product_parameters:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductParameter'
+          readOnly: true
+      required:
+      - id
+      - price
+      - price_rrc
+      - product
+      - product_parameters
+      - quantity
+    ProductParameter:
+      type: object
+      properties:
+        parameter:
+          type: string
+          readOnly: true
+        value:
+          type: string
+          title: Значение
+          maxLength: 100
+      required:
+      - parameter
+      - value
+    Shop:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Название
+          maxLength: 50
+        state:
+          type: boolean
+          title: Статус получения заказов
+      required:
+      - id
+      - name
+    StateEnum:
+      enum:
+      - basket
+      - new
+      - confirmed
+      - assembled
+      - sent
+      - delivered
+      - canceled
+      type: string
+      description: |-
+        * `basket` - Статус корзины
+        * `new` - Новый
+        * `confirmed` - Подтвержден
+        * `assembled` - Собран
+        * `sent` - Отправлен
+        * `delivered` - Доставлен
+        * `canceled` - Отменен
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          title: Email address
+          maxLength: 254
+        password:
+          type: string
+          maxLength: 100
+        company:
+          type: string
+          title: Компания
+          maxLength: 40
+        position:
+          type: string
+          title: Должность
+          maxLength: 40
+        contacts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Contact'
+          readOnly: true
+      required:
+      - contacts
+      - email
+      - id
+      - password
+    basket_delete:
+      type: object
+      properties:
+        Status:
+          type: boolean
+        Удалено объектов:
+          type: integer
+      required:
+      - Status
+      - Удалено объектов
+    basket_post:
+      type: object
+      properties:
+        Status:
+          type: boolean
+        Создано объектов:
+          type: integer
+      required:
+      - Status
+      - Создано объектов
+    basket_update:
+      type: object
+      properties:
+        Status:
+          type: boolean
+        Обновлено объектов:
+          type: integer
+      required:
+      - Status
+      - Обновлено объектов
+    login_account:
+      type: object
+      properties:
+        Status:
+          type: boolean
+        Token:
+          type: string
+          maxLength: 200
+      required:
+      - Status
+      - Token
+    update_contact:
+      type: object
+      properties:
+        Status:
+          type: boolean
+      required:
+      - Status
+    user_register:
+      type: object
+      properties:
+        status:
+          type: boolean
+      required:
+      - status
+  securitySchemes:
+    tokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: Token-based authentication with required prefix "Token"

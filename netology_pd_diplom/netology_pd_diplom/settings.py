@@ -160,6 +160,6 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 SPECTACULAR_SETTINGS = {
     "TITLE": "API Order Service",
     "DESCRIPTION": "Api for service of sales",
-    "VERSION": "v1",
+    "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
 }
