@@ -2,11 +2,10 @@ from rest_framework.permissions import BasePermission
 
 
 class IsShop(BasePermission):
-    message = 'Доступно только для магазинов'
+    message = "Доступно только для магазинов"
 
     def has_permission(self, request, view):
-        user = request.user
-        return user.user_type == "shop"
+        return request.user.type == "shop"
 
 
 class IsOwner(BasePermission):

@@ -39,7 +39,7 @@ from backend.models import (
     ProductParameter,
     Shop,
 )
-from backend.permissions import IsShop, IsOwner
+from backend.permissions import IsOwner, IsShop
 from backend.serializers import (
     AddContactSerializer,
     CategorySerializer,
@@ -197,6 +197,7 @@ class AccountDetails(APIView):
     Attributes:
     - None
     """
+
     permission_classes = (IsAuthenticated, IsOwner)
     throttle_classes = (UserRateThrottle,)
 
@@ -693,6 +694,7 @@ class PartnerUpdate(APIView):
     Attributes:
     - None
     """
+
     permission_classes = (IsAuthenticated, IsShop)
     throttle_classes = (UserRateThrottle,)
 
@@ -793,6 +795,7 @@ class PartnerState(APIView):
     Attributes:
     - None
     """
+
     permission_classes = (IsAuthenticated, IsShop)
     throttle_classes = (UserRateThrottle,)
 
@@ -813,7 +816,8 @@ class PartnerState(APIView):
         Returns:
         - Response: The response containing the state of the partner.
         """
-        shop = request.user.shop
+        # shop = request.user.shop
+        shop = Shop.objects.get(user=request.user)
         serializer = ShopSerializer(shop)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -822,14 +826,14 @@ class PartnerState(APIView):
         parameters=[
             OpenApiParameter(
                 "state",
-                type=OpenApiTypes.INT,
+                type=OpenApiTypes.BOOL,
                 location=OpenApiParameter.QUERY,
-                description="Укажите url с информацией",
+                description="Укажите новый статус",
                 required=True,
             ),
         ],
         responses={
-            (200, "application/json"): OpenApiResponse(
+            (201, "application/json"): OpenApiResponse(
                 description="Success",
                 response=inline_serializer(
                     name="PartnerState",
@@ -854,12 +858,12 @@ class PartnerState(APIView):
         """
 
         state = request.query_params.get("state")
+        state = state if state else request.data.get("state")
         if state:
             try:
-                Shop.objects.filter(user_id=request.user.id).update(
-                    state=strtobool(state)
-                )
-                return JsonResponse({"Status": True}, status=status.HTTP_200_OK)
+                Shop.objects.filter(user_id=request.user.id).update(state=state)
+                return JsonResponse({"Status": True}, status=status.HTTP_201_CREATED)
+
             except ValueError as error:
                 return JsonResponse(
                     {"Status": False, "Errors": str(error)},
@@ -881,6 +885,7 @@ class PartnerOrders(APIView):
     Attributes:
     - None
     """
+
     permission_classes = (IsAuthenticated, IsShop)
     throttle_classes = (UserRateThrottle,)
 
@@ -937,6 +942,7 @@ class ContactView(APIView):
     Attributes:
     - None
     """
+
     permission_classes = (IsAuthenticated,)
     throttle_classes = (UserRateThrottle,)
 
