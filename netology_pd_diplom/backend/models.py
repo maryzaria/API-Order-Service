@@ -260,6 +260,7 @@ class OrderItem(models.Model):
 
 class ConfirmEmailToken(models.Model):
     objects = models.manager.Manager()
+
     class Meta:
         verbose_name = 'Токен подтверждения Email'
         verbose_name_plural = 'Токены подтверждения Email'

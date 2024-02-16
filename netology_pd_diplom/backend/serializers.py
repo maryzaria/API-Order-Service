@@ -86,3 +86,13 @@ class OrderSerializer(serializers.ModelSerializer):
         model = Order
         fields = ('id', 'ordered_items', 'state', 'dt', 'total_sum', 'contact',)
         read_only_fields = ('id',)
+
+
+class ConfirmAccountSerializer(serializers.Serializer):
+    email = serializers.CharField(max_length=200)
+    token = serializers.CharField(max_length=200)
+
+
+class LoginAccountSerializer(serializers.Serializer):
+    email = serializers.CharField(max_length=200)
+    password = serializers.CharField(max_length=200)

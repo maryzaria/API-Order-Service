@@ -1,4 +1,7 @@
 from distutils.util import strtobool
+
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema, OpenApiResponse, inline_serializer, OpenApiParameter, OpenApiExample
 from rest_framework.request import Request
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
@@ -12,23 +15,34 @@ from rest_framework.authtoken.models import Token
 from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework import serializers as s, status
 from ujson import loads as load_json
 from yaml import load as load_yaml, Loader
 
 from backend.models import Shop, Category, Product, ProductInfo, Parameter, ProductParameter, Order, OrderItem, \
     Contact, ConfirmEmailToken
 from backend.serializers import UserSerializer, CategorySerializer, ShopSerializer, ProductInfoSerializer, \
-    OrderItemSerializer, OrderSerializer, ContactSerializer
+    OrderItemSerializer, OrderSerializer, ContactSerializer, ConfirmAccountSerializer, LoginAccountSerializer
 from backend.signals import new_user_registered, new_order
 
 
 class RegisterAccount(APIView):
-    """
-    Для регистрации покупателей
-    """
+    """Регистрация покупателей"""
 
-    # Регистрация методом POST
-
+    @extend_schema(
+        request=UserSerializer,
+        responses={
+            (201, 'application/json'): OpenApiResponse(
+                description='Success',
+                response=inline_serializer(
+                    name='user_register',
+                    fields={'status': s.BooleanField()},
+                ),
+            ),
+            400: OpenApiResponse(description='Не указаны все необходимые аргументы, либо они некорректны'),
+            403: OpenApiResponse(description='Учетные данные не были предоставлены'),
+        },
+    )
     def post(self, request, *args, **kwargs):
         """
             Process a POST request and create a new user.
@@ -51,21 +65,23 @@ class RegisterAccount(APIView):
                 # noinspection PyTypeChecker
                 for item in password_error:
                     error_array.append(item)
-                return JsonResponse({'Status': False, 'Errors': {'password': error_array}})
+                return JsonResponse({'Status': False, 'Errors': {'password': error_array}},
+                                    status=status.HTTP_400_BAD_REQUEST)
             else:
                 # проверяем данные для уникальности имени пользователя
-
                 user_serializer = UserSerializer(data=request.data)
                 if user_serializer.is_valid():
                     # сохраняем пользователя
                     user = user_serializer.save()
                     user.set_password(request.data['password'])
                     user.save()
-                    return JsonResponse({'Status': True})
+                    return JsonResponse({'Status': True}, status=status.HTTP_201_CREATED)
                 else:
-                    return JsonResponse({'Status': False, 'Errors': user_serializer.errors})
+                    return JsonResponse({'Status': False, 'Errors': user_serializer.errors},
+                                        status=status.HTTP_400_BAD_REQUEST)
 
-        return JsonResponse({'Status': False, 'Errors': 'Не указаны все необходимые аргументы'})
+        return JsonResponse({'Status': False, 'Errors': 'Не указаны все необходимые аргументы'},
+                            status=status.HTTP_400_BAD_REQUEST)
 
 
 class ConfirmAccount(APIView):
@@ -74,6 +90,20 @@ class ConfirmAccount(APIView):
     """
 
     # Регистрация методом POST
+    @extend_schema(
+        request=ConfirmAccountSerializer,
+        responses={
+            (200, 'application/json'): OpenApiResponse(
+                description='Success',
+                response=inline_serializer(
+                    name='user_register',
+                    fields={'status': s.BooleanField()},
+                ),
+            ),
+            400: OpenApiResponse(description='Не указаны все необходимые аргументы, либо они некорректны'),
+            403: OpenApiResponse(description='Учетные данные не были предоставлены'),
+        },
+    )
     def post(self, request, *args, **kwargs):
         """
                 Подтверждает почтовый адрес пользователя.
@@ -93,11 +123,13 @@ class ConfirmAccount(APIView):
                 token.user.is_active = True
                 token.user.save()
                 token.delete()
-                return JsonResponse({'Status': True})
+                return JsonResponse({'Status': True}, status=status.HTTP_200_OK)
             else:
-                return JsonResponse({'Status': False, 'Errors': 'Неправильно указан токен или email'})
+                return JsonResponse({'Status': False, 'Errors': 'Неправильно указан токен или email'},
+                                    status=status.HTTP_400_BAD_REQUEST)
 
-        return JsonResponse({'Status': False, 'Errors': 'Не указаны все необходимые аргументы'})
+        return JsonResponse({'Status': False, 'Errors': 'Не указаны все необходимые аргументы'},
+                            status=status.HTTP_400_BAD_REQUEST)
 
 
 class AccountDetails(APIView):
@@ -113,6 +145,12 @@ class AccountDetails(APIView):
     """
 
     # получить данные
+    @extend_schema(
+        responses={
+            (200, 'application/json'): UserSerializer,
+            403: OpenApiResponse(description='Учетные данные не были предоставлены'),
+        }
+    )
     def get(self, request: Request, *args, **kwargs):
         """
                Retrieve the details of the authenticated user.
@@ -124,12 +162,26 @@ class AccountDetails(APIView):
                - Response: The response containing the details of the authenticated user.
         """
         if not request.user.is_authenticated:
-            return JsonResponse({'Status': False, 'Error': 'Log in required'}, status=403)
+            return JsonResponse({'Status': False, 'Error': 'Log in required'}, status=status.HTTP_403_FORBIDDEN)
 
         serializer = UserSerializer(request.user)
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     # Редактирование методом POST
+    @extend_schema(
+        request=UserSerializer,
+        responses={
+            (200, 'application/json'): OpenApiResponse(
+                description='Success',
+                response=inline_serializer(
+                    name='user_register',
+                    fields={'status': s.BooleanField()},
+                ),
+            ),
+            400: OpenApiResponse(description='Некорректные данные'),
+            403: OpenApiResponse(description='Учетные данные не были предоставлены'),
+        }
+    )
     def post(self, request, *args, **kwargs):
         """
                 Update the account details of the authenticated user.
@@ -141,7 +193,7 @@ class AccountDetails(APIView):
                 - JsonResponse: The response indicating the status of the operation and any errors.
                 """
         if not request.user.is_authenticated:
-            return JsonResponse({'Status': False, 'Error': 'Log in required'}, status=403)
+            return JsonResponse({'Status': False, 'Error': 'Log in required'}, status=status.HTTP_403_FORBIDDEN)
         # проверяем обязательные аргументы
 
         if 'password' in request.data:
@@ -154,7 +206,8 @@ class AccountDetails(APIView):
                 # noinspection PyTypeChecker
                 for item in password_error:
                     error_array.append(item)
-                return JsonResponse({'Status': False, 'Errors': {'password': error_array}})
+                return JsonResponse({'Status': False, 'Errors': {'password': error_array}},
+                                    status=status.HTTP_400_BAD_REQUEST)
             else:
                 request.user.set_password(request.data['password'])
 
@@ -162,9 +215,10 @@ class AccountDetails(APIView):
         user_serializer = UserSerializer(request.user, data=request.data, partial=True)
         if user_serializer.is_valid():
             user_serializer.save()
-            return JsonResponse({'Status': True})
+            return JsonResponse({'Status': True}, status=status.HTTP_200_OK)
         else:
-            return JsonResponse({'Status': False, 'Errors': user_serializer.errors})
+            return JsonResponse({'Status': False, 'Errors': user_serializer.errors},
+                                status=status.HTTP_400_BAD_REQUEST)
 
 
 class LoginAccount(APIView):
@@ -173,6 +227,19 @@ class LoginAccount(APIView):
     """
 
     # Авторизация методом POST
+    @extend_schema(
+        request=LoginAccountSerializer,
+        responses={
+            (200, 'application/json'): OpenApiResponse(
+                description='Success',
+                response=inline_serializer(
+                    name='login_account',
+                    fields={'Status': s.BooleanField(), 'Token': s.CharField(max_length=200)},
+                ),
+            ),
+            400: OpenApiResponse(description='Некорректные данные'),
+        }
+    )
     def post(self, request, *args, **kwargs):
         """
                 Authenticate a user.
@@ -190,11 +257,13 @@ class LoginAccount(APIView):
                 if user.is_active:
                     token, _ = Token.objects.get_or_create(user=user)
 
-                    return JsonResponse({'Status': True, 'Token': token.key})
+                    return JsonResponse({'Status': True, 'Token': token.key}, status=status.HTTP_200_OK)
 
-            return JsonResponse({'Status': False, 'Errors': 'Не удалось авторизовать'})
+            return JsonResponse({'Status': False, 'Errors': 'Не удалось авторизовать'},
+                                status=status.HTTP_400_BAD_REQUEST)
 
-        return JsonResponse({'Status': False, 'Errors': 'Не указаны все необходимые аргументы'})
+        return JsonResponse({'Status': False, 'Errors': 'Не указаны все необходимые аргументы'},
+                            status=status.HTTP_400_BAD_REQUEST)
 
 
 class CategoryView(ListAPIView):
@@ -224,6 +293,17 @@ class ProductInfoView(APIView):
         - None
         """
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter('shop_id', type=OpenApiTypes.INT, location=OpenApiParameter.QUERY,
+                             description='Enter shop_id'),
+            OpenApiParameter('category_id', type=OpenApiTypes.INT, location=OpenApiParameter.QUERY,
+                             description='Enter category_id'),
+        ],
+        responses={
+            (200, 'application/json'): ProductInfoSerializer(many=True),
+        }
+    )
     def get(self, request: Request, *args, **kwargs):
         """
                Retrieve the product information based on the specified filters.
@@ -252,7 +332,7 @@ class ProductInfoView(APIView):
 
         serializer = ProductInfoSerializer(queryset, many=True)
 
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class BasketView(APIView):
@@ -270,6 +350,12 @@ class BasketView(APIView):
     """
 
     # получить корзину
+    @extend_schema(
+        responses={
+            (200, 'application/json'): OrderSerializer(many=True),
+            403: OpenApiResponse(description='Учетные данные не были предоставлены'),
+        }
+    )
     def get(self, request, *args, **kwargs):
         """
                 Retrieve the items in the user's basket.
@@ -281,7 +367,7 @@ class BasketView(APIView):
                 - Response: The response containing the items in the user's basket.
                 """
         if not request.user.is_authenticated:
-            return JsonResponse({'Status': False, 'Error': 'Log in required'}, status=403)
+            return JsonResponse({'Status': False, 'Error': 'Log in required'}, status=status.HTTP_403_FORBIDDEN)
         basket = Order.objects.filter(
             user_id=request.user.id, state='basket').prefetch_related(
             'ordered_items__product_info__product__category',
@@ -289,9 +375,25 @@ class BasketView(APIView):
             total_sum=Sum(F('ordered_items__quantity') * F('ordered_items__product_info__price'))).distinct()
 
         serializer = OrderSerializer(basket, many=True)
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     # редактировать корзину
+    @extend_schema(
+        request=OrderItemSerializer(many=True),
+        responses={
+            (201, 'application/json'): OpenApiResponse(
+                description='Success',
+                response=inline_serializer(
+                    name='basket_post',
+                    fields={'Status': s.BooleanField(),
+                            'Создано объектов': s.IntegerField()
+                            },
+                ),
+            ),
+            400: OpenApiResponse(description='Некорректные данные'),
+            403: OpenApiResponse(description='Учетные данные не были предоставлены'),
+        }
+    )
     def post(self, request, *args, **kwargs):
         """
                Add an items to the user's basket.
@@ -302,37 +404,60 @@ class BasketView(APIView):
                Returns:
                - JsonResponse: The response indicating the status of the operation and any errors.
                """
-        if not request.user.is_authenticated:
-            return JsonResponse({'Status': False, 'Error': 'Log in required'}, status=403)
 
-        items_sting = request.data.get('items')
-        if items_sting:
-            try:
-                items_dict = load_json(items_sting)
-            except ValueError:
-                return JsonResponse({'Status': False, 'Errors': 'Неверный формат запроса'})
-            else:
+        if not request.user.is_authenticated:
+            return JsonResponse({'Status': False, 'Error': 'Log in required'}, status=status.HTTP_403_FORBIDDEN)
+        try:
+            items_list = request.data
+            if items_list:
                 basket, _ = Order.objects.get_or_create(user_id=request.user.id, state='basket')
                 objects_created = 0
-                for order_item in items_dict:
+                for order_item in items_list:
                     order_item.update({'order': basket.id})
                     serializer = OrderItemSerializer(data=order_item)
                     if serializer.is_valid():
                         try:
                             serializer.save()
                         except IntegrityError as error:
-                            return JsonResponse({'Status': False, 'Errors': str(error)})
+                            return JsonResponse({'Status': False, 'Errors': str(error)},
+                                                status=status.HTTP_400_BAD_REQUEST)
                         else:
                             objects_created += 1
-
                     else:
+                        return JsonResponse({'Status': False, 'Errors': serializer.errors},
+                                            status=status.HTTP_400_BAD_REQUEST)
 
-                        return JsonResponse({'Status': False, 'Errors': serializer.errors})
+                return JsonResponse({'Status': True, 'Создано объектов': objects_created},
+                                    status=status.HTTP_201_CREATED)
+            return JsonResponse({'Status': False, 'Errors': 'Не указаны все необходимые аргументы'},
+                                status=status.HTTP_400_BAD_REQUEST)
 
-                return JsonResponse({'Status': True, 'Создано объектов': objects_created})
-        return JsonResponse({'Status': False, 'Errors': 'Не указаны все необходимые аргументы'})
+        except (ValueError, TypeError):
+            return JsonResponse({'Status': False, 'Errors': 'Неверный формат запроса'},
+                                status=status.HTTP_400_BAD_REQUEST)
+        except Exception as err:
+            return JsonResponse({'Status': False, 'Error': str(err)}, status=status.HTTP_400_BAD_REQUEST)
 
     # удалить товары из корзины
+    @extend_schema(
+        parameters=[
+            OpenApiParameter('items_id', type=OpenApiTypes.INT, location=OpenApiParameter.QUERY,
+                             description='перечислите id через запятую'),
+        ],
+        responses={
+            (201, 'application/json'): OpenApiResponse(
+                description='Success',
+                response=inline_serializer(
+                    name='basket_delete',
+                    fields={'Status': s.BooleanField(),
+                            'Удалено объектов': s.IntegerField()
+                            },
+                ),
+            ),
+            400: OpenApiResponse(description='Некорректные данные'),
+            403: OpenApiResponse(description='Учетные данные не были предоставлены'),
+        }
+    )
     def delete(self, request, *args, **kwargs):
         """
                 Remove  items from the user's basket.
@@ -344,25 +469,45 @@ class BasketView(APIView):
                 - JsonResponse: The response indicating the status of the operation and any errors.
                 """
         if not request.user.is_authenticated:
-            return JsonResponse({'Status': False, 'Error': 'Log in required'}, status=403)
+            return JsonResponse({'Status': False, 'Error': 'Log in required'}, status=status.HTTP_403_FORBIDDEN)
+        try:
+            items_sting = request.query_params.get('items_id')
+            if items_sting:
+                items_list = items_sting.split(',')
+                basket, _ = Order.objects.get_or_create(user_id=request.user.id, state='basket')
+                query = Q()
+                objects_deleted = False
+                for order_item_id in items_list:
+                    if order_item_id.isdigit():
+                        query = query | Q(order_id=basket.id, id=order_item_id)
+                        objects_deleted = True
 
-        items_sting = request.data.get('items')
-        if items_sting:
-            items_list = items_sting.split(',')
-            basket, _ = Order.objects.get_or_create(user_id=request.user.id, state='basket')
-            query = Q()
-            objects_deleted = False
-            for order_item_id in items_list:
-                if order_item_id.isdigit():
-                    query = query | Q(order_id=basket.id, id=order_item_id)
-                    objects_deleted = True
-
-            if objects_deleted:
-                deleted_count = OrderItem.objects.filter(query).delete()[0]
-                return JsonResponse({'Status': True, 'Удалено объектов': deleted_count})
-        return JsonResponse({'Status': False, 'Errors': 'Не указаны все необходимые аргументы'})
+                if objects_deleted:
+                    deleted_count = OrderItem.objects.filter(query).delete()[0]
+                    return JsonResponse({'Status': True, 'Удалено объектов': deleted_count},
+                                        status=status.HTTP_200_OK)
+            return JsonResponse({'Status': False, 'Errors': 'Не указаны все необходимые аргументы'},
+                                status=status.HTTP_400_BAD_REQUEST)
+        except Exception as err:
+            return JsonResponse({'Status': False, 'Error': str(err)}, status=status.HTTP_400_BAD_REQUEST)
 
     # добавить позиции в корзину
+    @extend_schema(
+        request=OrderItemSerializer(many=True),
+        responses={
+            (201, 'application/json'): OpenApiResponse(
+                description='Success',
+                response=inline_serializer(
+                    name='basket_update',
+                    fields={'Status': s.BooleanField(),
+                            'Обновлено объектов': s.IntegerField()
+                            },
+                ),
+            ),
+            400: OpenApiResponse(description='Некорректные данные'),
+            403: OpenApiResponse(description='Учетные данные не были предоставлены'),
+        }
+    )
     def put(self, request, *args, **kwargs):
         """
                Update the items in the user's basket.
@@ -374,24 +519,25 @@ class BasketView(APIView):
                - JsonResponse: The response indicating the status of the operation and any errors.
                """
         if not request.user.is_authenticated:
-            return JsonResponse({'Status': False, 'Error': 'Log in required'}, status=403)
-
-        items_sting = request.data.get('items')
-        if items_sting:
-            try:
-                items_dict = load_json(items_sting)
-            except ValueError:
-                return JsonResponse({'Status': False, 'Errors': 'Неверный формат запроса'})
-            else:
+            return JsonResponse({'Status': False, 'Error': 'Log in required'}, status=status.HTTP_403_FORBIDDEN)
+        try:
+            items_list = request.data
+            if items_list:
                 basket, _ = Order.objects.get_or_create(user_id=request.user.id, state='basket')
                 objects_updated = 0
-                for order_item in items_dict:
+                for order_item in items_list:
                     if type(order_item['id']) == int and type(order_item['quantity']) == int:
                         objects_updated += OrderItem.objects.filter(order_id=basket.id, id=order_item['id']).update(
                             quantity=order_item['quantity'])
 
-                return JsonResponse({'Status': True, 'Обновлено объектов': objects_updated})
-        return JsonResponse({'Status': False, 'Errors': 'Не указаны все необходимые аргументы'})
+                return JsonResponse({'Status': True, 'Обновлено объектов': objects_updated}, status=status.HTTP_200_OK)
+            return JsonResponse({'Status': False, 'Errors': 'Не указаны все необходимые аргументы'},
+                                status=status.HTTP_400_BAD_REQUEST)
+        except (ValueError, TypeError):
+            return JsonResponse({'Status': False, 'Errors': 'Неверный формат запроса'},
+                                status=status.HTTP_400_BAD_REQUEST)
+        except Exception as err:
+            return JsonResponse({'Status': False, 'Error': str(err)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class PartnerUpdate(APIView):
@@ -470,6 +616,7 @@ class PartnerState(APIView):
        Attributes:
        - None
        """
+
     # получить текущий статус
     def get(self, request, *args, **kwargs):
         """
