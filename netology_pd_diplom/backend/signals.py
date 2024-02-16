@@ -3,7 +3,7 @@ from typing import Type
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.db.models.signals import post_save
-from django.dispatch import receiver, Signal
+from django.dispatch import Signal, receiver
 from django_rest_passwordreset.signals import reset_password_token_created
 
 from backend.models import ConfirmEmailToken, User
@@ -34,15 +34,17 @@ def password_reset_token_created(sender, instance, reset_password_token, **kwarg
         # from:
         settings.EMAIL_HOST_USER,
         # to:
-        [reset_password_token.user.email]
+        [reset_password_token.user.email],
     )
     msg.send()
 
 
 @receiver(post_save, sender=User)
-def new_user_registered_signal(sender: Type[User], instance: User, created: bool, **kwargs):
+def new_user_registered_signal(
+    sender: Type[User], instance: User, created: bool, **kwargs
+):
     """
-     отправляем письмо с подтрердждением почты
+    отправляем письмо с подтрердждением почты
     """
     if created and not instance.is_active:
         # send an e-mail to the user
@@ -56,7 +58,7 @@ def new_user_registered_signal(sender: Type[User], instance: User, created: bool
             # from:
             settings.EMAIL_HOST_USER,
             # to:
-            [instance.email]
+            [instance.email],
         )
         msg.send()
 
@@ -73,10 +75,10 @@ def new_order_signal(user_id, **kwargs):
         # title:
         f"Обновление статуса заказа",
         # message:
-        'Заказ сформирован',
+        "Заказ сформирован",
         # from:
         settings.EMAIL_HOST_USER,
         # to:
-        [user.email]
+        [user.email],
     )
     msg.send()
