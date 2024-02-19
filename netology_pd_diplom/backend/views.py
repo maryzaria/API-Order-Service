@@ -132,7 +132,7 @@ class ConfirmAccount(APIView):
             (200, "application/json"): OpenApiResponse(
                 description="Success",
                 response=inline_serializer(
-                    name="ConfirmAccount",
+                    name="confirm_account",
                     fields={"status": s.BooleanField()},
                 ),
             ),
@@ -218,7 +218,7 @@ class AccountDetails(APIView):
             (200, "application/json"): OpenApiResponse(
                 description="Success",
                 response=inline_serializer(
-                    name="AccountDetails",
+                    name="account_details",
                     fields={"status": s.BooleanField()},
                 ),
             ),
@@ -701,7 +701,7 @@ class PartnerUpdate(APIView):
             (200, "application/json"): OpenApiResponse(
                 description="Success",
                 response=inline_serializer(
-                    name="PartnerUpdate",
+                    name="partner_update",
                     fields={"status": s.BooleanField()},
                 ),
             ),
@@ -786,7 +786,7 @@ class PartnerState(APIView):
             (201, "application/json"): OpenApiResponse(
                 description="Success",
                 response=inline_serializer(
-                    name="PartnerState",
+                    name="change_partner_state",
                     fields={"status": s.BooleanField()},
                 ),
             ),
@@ -970,7 +970,7 @@ class ContactView(APIView):
             (201, "application/json"): OpenApiResponse(
                 description="Success",
                 response=inline_serializer(
-                    name="basket_delete",
+                    name="contact_delete",
                     fields={
                         "Status": s.BooleanField(),
                         "Удалено объектов": s.IntegerField(),
@@ -1135,7 +1135,7 @@ class OrderView(APIView):
             (201, "application/json"): OpenApiResponse(
                 description="Success",
                 response=inline_serializer(
-                    name="OrderView",
+                    name="order_get",
                     fields={"Status": s.BooleanField()},
                 ),
             ),
