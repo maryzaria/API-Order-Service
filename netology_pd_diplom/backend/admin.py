@@ -1,6 +1,3 @@
-from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
-
 from backend.models import (
     Category,
     ConfirmEmailToken,
@@ -14,6 +11,8 @@ from backend.models import (
     Shop,
     User,
 )
+from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin
 
 
 class ProductInline(admin.TabularInline):

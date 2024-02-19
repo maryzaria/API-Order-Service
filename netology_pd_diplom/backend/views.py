@@ -1,32 +1,3 @@
-from distutils.util import strtobool
-
-from django.contrib.auth import authenticate
-from django.contrib.auth.password_validation import validate_password
-from django.core.exceptions import PermissionDenied
-from django.core.validators import URLValidator
-from django.db import IntegrityError
-from django.db.models import F, Q, Sum
-from django.http import JsonResponse
-from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import (
-    OpenApiParameter,
-    OpenApiResponse,
-    extend_schema,
-    inline_serializer,
-)
-from requests import get
-from rest_framework import serializers as s
-from rest_framework import status
-from rest_framework.authtoken.models import Token
-from rest_framework.generics import ListAPIView
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.request import Request
-from rest_framework.response import Response
-from rest_framework.throttling import UserRateThrottle
-from rest_framework.views import APIView
-from yaml import Loader
-from yaml import load as load_yaml
-
 from backend.models import (
     Category,
     ConfirmEmailToken,
@@ -54,6 +25,32 @@ from backend.serializers import (
     UserSerializer,
 )
 from backend.signals import new_order
+from django.contrib.auth import authenticate
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import PermissionDenied
+from django.core.validators import URLValidator
+from django.db import IntegrityError
+from django.db.models import F, Q, Sum
+from django.http import JsonResponse
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import (
+    OpenApiParameter,
+    OpenApiResponse,
+    extend_schema,
+    inline_serializer,
+)
+from requests import get
+from rest_framework import serializers as s
+from rest_framework import status
+from rest_framework.authtoken.models import Token
+from rest_framework.generics import ListAPIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
+from rest_framework.response import Response
+from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
+from rest_framework.views import APIView
+from yaml import Loader
+from yaml import load as load_yaml
 
 
 class RegisterAccount(APIView):
@@ -135,6 +132,8 @@ class ConfirmAccount(APIView):
     """
     Класс для подтверждения почтового адреса
     """
+
+    throttle_classes = (AnonRateThrottle,)
 
     # Регистрация методом POST
     @extend_schema(
@@ -282,6 +281,8 @@ class LoginAccount(APIView):
     Класс для авторизации пользователей
     """
 
+    throttle_classes = (AnonRateThrottle,)
+
     # Авторизация методом POST
     @extend_schema(
         request=LoginAccountSerializer,
@@ -342,6 +343,7 @@ class CategoryView(ListAPIView):
 
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    throttle_classes = (AnonRateThrottle,)
 
 
 class ShopView(ListAPIView):
@@ -351,6 +353,7 @@ class ShopView(ListAPIView):
 
     queryset = Shop.objects.filter(state=True)
     serializer_class = ShopSerializer
+    throttle_classes = (AnonRateThrottle,)
 
 
 class ProductInfoView(APIView):
@@ -363,6 +366,8 @@ class ProductInfoView(APIView):
     Attributes:
     - None
     """
+
+    throttle_classes = (AnonRateThrottle,)
 
     @extend_schema(
         parameters=[
