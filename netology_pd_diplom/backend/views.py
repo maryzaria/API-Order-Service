@@ -1,13 +1,32 @@
+from django.contrib.auth import authenticate
+from django.core.exceptions import PermissionDenied
+from django.db import IntegrityError
+from django.db.models import F, Q, Sum
+from django.http import JsonResponse
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import (
+    OpenApiParameter,
+    OpenApiResponse,
+    extend_schema,
+    inline_serializer,
+)
+from rest_framework import serializers as s
+from rest_framework import status
+from rest_framework.authtoken.models import Token
+from rest_framework.generics import ListAPIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
+from rest_framework.response import Response
+from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
+from rest_framework.views import APIView
+
 from backend.models import (
     Category,
     ConfirmEmailToken,
     Contact,
     Order,
     OrderItem,
-    Parameter,
-    Product,
     ProductInfo,
-    ProductParameter,
     Shop,
 )
 from backend.permissions import IsOwner, IsShop
@@ -24,33 +43,9 @@ from backend.serializers import (
     ShopSerializer,
     UserSerializer,
 )
-from django.contrib.auth import authenticate
-from django.contrib.auth.password_validation import validate_password
-from django.core.exceptions import PermissionDenied
-from django.core.validators import URLValidator
-from django.db import IntegrityError
-from django.db.models import F, Q, Sum
-from django.http import JsonResponse
-from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import (
-    OpenApiParameter,
-    OpenApiResponse,
-    extend_schema,
-    inline_serializer,
-)
-from requests import get
-from rest_framework import serializers as s
-from rest_framework import status
-from rest_framework.authtoken.models import Token
-from rest_framework.generics import ListAPIView
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.request import Request
-from rest_framework.response import Response
-from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
-from rest_framework.views import APIView
-from yaml import Loader
-from yaml import load as load_yaml
-from .tasks import new_order, new_user_registered
+
+from .tasks import do_import, new_order, new_user_registered
+from .utils import check_password
 
 
 class RegisterAccount(APIView):
@@ -93,14 +88,8 @@ class RegisterAccount(APIView):
         }.issubset(request.data):
 
             # проверяем пароль на сложность
-            sad = "asd"
-            try:
-                validate_password(request.data["password"])
-            except Exception as password_error:
-                error_array = []
-                # noinspection PyTypeChecker
-                for item in password_error:
-                    error_array.append(item)
+            check, error_array = check_password(request)
+            if not check:
                 return JsonResponse(
                     {"Status": False, "Errors": {"password": error_array}},
                     status=status.HTTP_400_BAD_REQUEST,
@@ -249,15 +238,9 @@ class AccountDetails(APIView):
         """
 
         if "password" in request.data:
-            errors = {}
             # проверяем пароль на сложность
-            try:
-                validate_password(request.data["password"])
-            except Exception as password_error:
-                error_array = []
-                # noinspection PyTypeChecker
-                for item in password_error:
-                    error_array.append(item)
+            check, error_array = check_password(request)
+            if not check:
                 return JsonResponse(
                     {"Status": False, "Errors": {"password": error_array}},
                     status=status.HTTP_400_BAD_REQUEST,
@@ -741,52 +724,13 @@ class PartnerUpdate(APIView):
 
         url = request.query_params.get("url")
         if url:
-            validate_url = URLValidator()
             try:
-                validate_url(url)
-            except Exception as e:
-                return JsonResponse({"Status": False, "Error": str(e)})
-            else:
-                stream = get(url).content
-
-                data = load_yaml(stream, Loader=Loader)
-
-                shop, _ = Shop.objects.get_or_create(
-                    name=data["shop"], user_id=request.user.id
-                )
-                for category in data["categories"]:
-                    category_object, _ = Category.objects.get_or_create(
-                        id=category["id"], name=category["name"]
-                    )
-                    category_object.shops.add(shop.id)
-                    category_object.save()
-                ProductInfo.objects.filter(shop_id=shop.id).delete()
-                for item in data["goods"]:
-                    product, _ = Product.objects.get_or_create(
-                        name=item["name"], category_id=item["category"]
-                    )
-
-                    product_info = ProductInfo.objects.create(
-                        product_id=product.id,
-                        external_id=item["id"],
-                        model=item["model"],
-                        price=item["price"],
-                        price_rrc=item["price_rrc"],
-                        quantity=item["quantity"],
-                        shop_id=shop.id,
-                    )
-                    for name, value in item["parameters"].items():
-                        parameter_object, _ = Parameter.objects.get_or_create(name=name)
-                        ProductParameter.objects.create(
-                            product_info_id=product_info.id,
-                            parameter_id=parameter_object.id,
-                            value=value,
-                        )
-
+                do_import.delay(url, request.user.id)
                 return JsonResponse({"Status": True}, status=status.HTTP_200_OK)
-
+            except Exception as error:
+                return JsonResponse({"Status": False, "Error": str(error)})
         return JsonResponse(
-            {"Status": False, "Errors": "Не указаны все необходимые аргументы"},
+            {"Status": False, "Errors": "Не указан url"},
             status=status.HTTP_400_BAD_REQUEST,
         )
 

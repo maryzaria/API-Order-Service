@@ -1,3 +1,9 @@
+from django.urls import path
+from django_rest_passwordreset.views import (
+    reset_password_confirm,
+    reset_password_request_token,
+)
+
 from backend.views import (
     AccountDetails,
     BasketView,
@@ -12,11 +18,6 @@ from backend.views import (
     ProductInfoView,
     RegisterAccount,
     ShopView,
-)
-from django.urls import path
-from django_rest_passwordreset.views import (
-    reset_password_confirm,
-    reset_password_request_token,
 )
 
 app_name = "backend"
