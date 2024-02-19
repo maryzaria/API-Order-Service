@@ -24,7 +24,6 @@ from backend.serializers import (
     ShopSerializer,
     UserSerializer,
 )
-from backend.signals import new_order
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import PermissionDenied
@@ -51,6 +50,7 @@ from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 from rest_framework.views import APIView
 from yaml import Loader
 from yaml import load as load_yaml
+from .tasks import new_order, new_user_registered
 
 
 class RegisterAccount(APIView):
@@ -113,6 +113,7 @@ class RegisterAccount(APIView):
                     user = user_serializer.save()
                     user.set_password(request.data["password"])
                     user.save()
+                    new_user_registered.delay(instance=request.user, created=True)
                     return JsonResponse(
                         {"Status": True}, status=status.HTTP_201_CREATED
                     )
@@ -1221,7 +1222,7 @@ class OrderView(APIView):
                     )
                 else:
                     if is_updated:
-                        new_order.send(sender=self.__class__, user_id=request.user.id)
+                        new_order.delay(user_id=request.user.id)
                         return JsonResponse({"Status": True}, status=status.HTTP_200_OK)
 
         return JsonResponse(
