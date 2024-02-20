@@ -9,18 +9,21 @@
 Должно получиться:
 ![started.png](reference/started.png)
 
-1. Проверяем, запустилась ли база данных и применились ли миграции:
+2. Проверяем, запустилась ли база данных и применились ли миграции:
    
 ```docker-compose exec web python manage.py migrate --noinput  ```
 
 Должно получиться:
 ![migrations.png](reference/migrations.png)
 
-1. Создаем суперпользователя
+3. Создаем суперпользователя
    
 ```docker-compose exec web python manage.py createsuperuser```
 
-### Проверить работоспособность
+4. Если статика не отображается, собираем статические файлы 
+```docker-compose exec web python manage.py collectstatic --no-input --clear```
+
+## Проверяем работоспособность
 
 Отправить запрос на ```http://localhost:1337/admin/```
 
