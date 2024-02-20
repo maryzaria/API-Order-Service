@@ -1,9 +1,9 @@
 #!/bin/sh
 
-until cd /src/netology_pd_diplom
-do
-    echo "Waiting for server volume..."
-done
+#until cd /src/
+#do
+#    echo "Waiting for server volume..."
+#done
 
 
 until python manage.py migrate

@@ -1,16 +1,6 @@
+from backend.models import (Category, Contact, Order, OrderItem, Product,
+                            ProductInfo, ProductParameter, Shop, User)
 from rest_framework import serializers
-
-from backend.models import (
-    Category,
-    Contact,
-    Order,
-    OrderItem,
-    Product,
-    ProductInfo,
-    ProductParameter,
-    Shop,
-    User,
-)
 
 
 class ContactSerializer(serializers.ModelSerializer):

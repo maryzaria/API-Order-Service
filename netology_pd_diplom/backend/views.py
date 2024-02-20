@@ -1,15 +1,21 @@
+from backend.models import (Category, ConfirmEmailToken, Contact, Order,
+                            OrderItem, ProductInfo, Shop)
+from backend.permissions import IsOwner, IsShop
+from backend.serializers import (AddContactSerializer, CategorySerializer,
+                                 ConfirmAccountSerializer, ContactSerializer,
+                                 LoginAccountSerializer,
+                                 OrderFromBasketSerializer,
+                                 OrderItemSerializer, OrderSerializer,
+                                 ProductInfoSerializer, ShopSerializer,
+                                 UserSerializer)
 from django.contrib.auth import authenticate
 from django.core.exceptions import PermissionDenied
 from django.db import IntegrityError
 from django.db.models import F, Q, Sum
 from django.http import JsonResponse
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import (
-    OpenApiParameter,
-    OpenApiResponse,
-    extend_schema,
-    inline_serializer,
-)
+from drf_spectacular.utils import (OpenApiParameter, OpenApiResponse,
+                                   extend_schema, inline_serializer)
 from rest_framework import serializers as s
 from rest_framework import status
 from rest_framework.authtoken.models import Token
@@ -19,30 +25,6 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 from rest_framework.views import APIView
-
-from backend.models import (
-    Category,
-    ConfirmEmailToken,
-    Contact,
-    Order,
-    OrderItem,
-    ProductInfo,
-    Shop,
-)
-from backend.permissions import IsOwner, IsShop
-from backend.serializers import (
-    AddContactSerializer,
-    CategorySerializer,
-    ConfirmAccountSerializer,
-    ContactSerializer,
-    LoginAccountSerializer,
-    OrderFromBasketSerializer,
-    OrderItemSerializer,
-    OrderSerializer,
-    ProductInfoSerializer,
-    ShopSerializer,
-    UserSerializer,
-)
 
 from .tasks import do_import, new_order, new_user_registered
 from .utils import check_password

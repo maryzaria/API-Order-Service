@@ -18,5 +18,5 @@ COPY . /src
 
 ENTRYPOINT ["/src/entrypoint.sh"]
 
-RUN chmod +x /src/server-entrypoint.sh
-RUN chmod +x /src/celery_entrypoint.sh
+#RUN chmod +x ./server-entrypoint.sh
+#RUN chmod +x /src/celery_entrypoint.sh
