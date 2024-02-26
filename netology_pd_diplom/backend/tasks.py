@@ -1,5 +1,13 @@
-from backend.models import (Category, ConfirmEmailToken, Parameter, Product,
-                            ProductInfo, ProductParameter, Shop, User)
+from backend.models import (
+    Category,
+    ConfirmEmailToken,
+    Parameter,
+    Product,
+    ProductInfo,
+    ProductParameter,
+    Shop,
+    User,
+)
 from celery import shared_task
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives

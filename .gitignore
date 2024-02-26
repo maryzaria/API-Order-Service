@@ -16,6 +16,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 .idea/
+token_google_auth.json
 
 # C extensions
 *.so

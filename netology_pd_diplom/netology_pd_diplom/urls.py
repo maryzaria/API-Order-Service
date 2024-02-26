@@ -18,9 +18,13 @@ from django.contrib import admin
 from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
+from backend.views import auth
+
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/v1/", include("backend.urls", namespace="backend")),
     path("schema/", SpectacularAPIView.as_view(), name="schema"),
     path("openapi/", SpectacularSwaggerView.as_view(url_name="schema")),
+    path("", include("social_django.urls", namespace="social")),
+    path("auth/", auth),
 ]
