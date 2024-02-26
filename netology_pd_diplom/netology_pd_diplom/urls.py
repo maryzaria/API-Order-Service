@@ -20,6 +20,7 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 from backend.views import auth, index
 
+
 urlpatterns = [
     path(r"jet/", include("jet.urls", "jet")),  # Django JET URLS
     path(
