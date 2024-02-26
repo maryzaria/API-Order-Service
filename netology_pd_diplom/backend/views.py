@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 
 from backend.models import (
     Category,
@@ -51,6 +51,10 @@ from .utils import check_password
 
 def auth(request):
     return render(request, "oauth.html")
+
+
+def index(request):
+    return redirect("openapi")
 
 
 class RegisterAccount(APIView):

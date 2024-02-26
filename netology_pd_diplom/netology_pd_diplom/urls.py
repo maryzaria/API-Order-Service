@@ -18,16 +18,19 @@ from django.contrib import admin
 from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
-from backend.views import auth
+from backend.views import auth, index
 
 urlpatterns = [
-    path(r'jet/', include('jet.urls', 'jet')),  # Django JET URLS
-    path(r'jet/dashboard/', include('jet.dashboard.urls', 'jet-dashboard')),  # Django JET dashboard URLS
+    path(r"jet/", include("jet.urls", "jet")),  # Django JET URLS
+    path(
+        r"jet/dashboard/", include("jet.dashboard.urls", "jet-dashboard")
+    ),  # Django JET dashboard URLS
     path("admin/", admin.site.urls),
     path("api/v1/", include("backend.urls", namespace="backend")),
     path("schema/", SpectacularAPIView.as_view(), name="schema"),
-    path("openapi/", SpectacularSwaggerView.as_view(url_name="schema")),
+    path("openapi/", SpectacularSwaggerView.as_view(url_name="schema"), name="openapi"),
+    path("", index),
     path("", include("social_django.urls", namespace="social")),
     path("auth/", auth),
-    path('silk/', include('silk.urls', namespace='silk'))
+    path("silk/", include("silk.urls", namespace="silk")),
 ]
