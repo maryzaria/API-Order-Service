@@ -33,6 +33,8 @@ CSRF_TRUSTED_ORIGINS = ["http://localhost:1337", "http://127.0.0.1:1337"]
 
 # Application definition
 INSTALLED_APPS = [
+    'jet.dashboard',
+    'jet',
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",

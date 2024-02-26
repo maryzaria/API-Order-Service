@@ -13,3 +13,5 @@ model_bakery==1.11.0
 celery~=5.3.0
 redis==4.5.4
 social-auth-app-django==5.4.0
+django-jet-reboot
+google-api-python-client==1.4.1
