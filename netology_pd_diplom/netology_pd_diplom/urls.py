@@ -29,4 +29,5 @@ urlpatterns = [
     path("openapi/", SpectacularSwaggerView.as_view(url_name="schema")),
     path("", include("social_django.urls", namespace="social")),
     path("auth/", auth),
+    path('silk/', include('silk.urls', namespace='silk'))
 ]
