@@ -13,5 +13,5 @@
 
 ### Проверить работоспособность
 
-Отправить запрос на ```http://localhost:1337/admin/```
-Документация: ```http://localhost:1337/openapi/```
+Отправить запрос на ```http://localhost/admin/```
+Документация: ```http://localhost/openapi/```

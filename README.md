@@ -32,12 +32,12 @@ docker-compose exec web python manage.py collectstatic --no-input --clear
 
 Отправить запрос на 
 ```shell
-http://localhost:1337/admin/
+http://localhost/admin/
 ```
 
 Документация API: 
 ```shell
-http://localhost:1337/openapi/
+http://localhost/openapi/
 ```
 
 [Описание документации по запросам в Swagger](https://app.swaggerhub.com/apis/ZARIPOVAMARYM/Diploma/1.0.0) 

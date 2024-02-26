@@ -9,4 +9,4 @@ class BackendConfig(AppConfig):
         """
         Импортируем сигналы
         """
-        import signals
+        from .signals import generate_thumbnails_async
