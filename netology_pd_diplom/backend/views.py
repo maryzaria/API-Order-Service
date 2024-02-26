@@ -1,3 +1,4 @@
+from django.http import HttpResponse
 from django.shortcuts import render, redirect
 
 from backend.models import (
@@ -51,6 +52,10 @@ from .utils import check_password
 
 def auth(request):
     return render(request, "oauth.html")
+
+
+def success(request):
+    return HttpResponse('Вы успешно авторизованы!')
 
 
 def index(request):

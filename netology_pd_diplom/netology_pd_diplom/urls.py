@@ -18,8 +18,7 @@ from django.contrib import admin
 from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
-from backend.views import auth, index
-
+from backend.views import auth, index, success
 
 urlpatterns = [
     path(r"jet/", include("jet.urls", "jet")),  # Django JET URLS
@@ -33,5 +32,6 @@ urlpatterns = [
     path("", index),
     path("", include("social_django.urls", namespace="social")),
     path("auth/", auth),
+    path('accounts/profile/', success),
     path("silk/", include("silk.urls", namespace="silk")),
 ]
