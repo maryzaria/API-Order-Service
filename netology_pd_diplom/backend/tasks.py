@@ -1,3 +1,7 @@
+import importlib
+
+from easy_thumbnails.files import generate_all_aliases
+
 from backend.models import (
     Category,
     ConfirmEmailToken,
@@ -122,3 +126,17 @@ def do_import(url, user_id):
                 parameter_id=parameter_object.id,
                 value=value,
             )
+
+
+@shared_task()
+def generate_thumbnails(class_path, pk, field):
+    bits = class_path.split(".")
+    generate_all_aliases(
+        getattr(
+            getattr(importlib.import_module(".".join(bits[:-1])), bits[-1]).objects.get(
+                pk=pk
+            ),
+            field,
+        ),
+        include_global=True,
+    )

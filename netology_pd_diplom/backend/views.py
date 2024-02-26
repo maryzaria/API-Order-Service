@@ -55,7 +55,7 @@ def auth(request):
 
 
 def success(request):
-    return HttpResponse('Вы успешно авторизованы!')
+    return HttpResponse("Вы успешно авторизованы!")
 
 
 def index(request):

@@ -14,8 +14,9 @@ import os
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 
-# from dotenv import load_dotenv
-# load_dotenv()
+from dotenv import load_dotenv
+
+load_dotenv()
 
 sentry_sdk.init(
     dsn=os.getenv("SENTRY_DNS"),
@@ -61,6 +62,7 @@ INSTALLED_APPS = [
     "drf_spectacular",
     "social_django",
     "silk",
+    "easy_thumbnails",
 ]
 
 MIDDLEWARE = [

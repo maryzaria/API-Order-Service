@@ -32,6 +32,6 @@ urlpatterns = [
     path("", index),
     path("", include("social_django.urls", namespace="social")),
     path("auth/", auth),
-    path('accounts/profile/', success),
+    path("accounts/profile/", success),
     path("silk/", include("silk.urls", namespace="silk")),
 ]
